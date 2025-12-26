@@ -4,8 +4,8 @@ import { ExamConfig, StudentResult, Student, User, Question } from './types';
 import { DashboardLayout, ExamList, PublishView, ExamEditor, ScoreManager, StudentManager, DashboardOverview } from './components/Dashboard';
 import { CreateExamModal, AssignExamModal, PublishExamModal } from './components/Modals';
 import { StartScreen, QuizScreen, ResultScreen } from './components/Player';
-import { authService } from './services/auth';
-import { dataService } from './services/dataService';
+import { authService } from "./src/services/auth";
+import { dataService } from './src/services/dataService';
 import { LoginModal } from './components/AuthModals';
 import { Loader2, AlertCircle } from 'lucide-react';
 
