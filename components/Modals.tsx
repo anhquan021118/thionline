@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Edit, X, Check, FileUp, UploadCloud, Loader2, CheckSquare, FolderPlus, XCircle, Share2, Clock, Copy, Sparkles, Eye, Send, RotateCcw, CheckCircle, ArrowLeft, RefreshCw, UserPlus, Users, Link, FileSpreadsheet, Download, PlayCircle, BookOpen, AlertTriangle, GraduationCap, Lock, EyeOff, Plus, Key, ImageIcon, Trash } from 'lucide-react';
+import { Edit, X, Check, FileUp, UploadCloud, Loader2, CheckSquare, FolderPlus, XCircle, Share2, Clock, Copy, Sparkles, Eye, Send, RotateCcw, CheckCircle, ArrowLeft, RefreshCw, UserPlus, Users, Link, FileSpreadsheet, Download, PlayCircle, BookOpen, AlertTriangle, GraduationCap, Lock, EyeOff, Plus, Key, ImageIcon, Trash, Settings, Calculator, ShieldAlert } from 'lucide-react';
 import { Question, SubQuestion, GradingConfig, Student, ExamConfig } from '../types';
 import { MathRenderer, loadExternalLibs, copyToClipboard, parseWordSmart, generateSecurityCode, parseStudentImport } from '../utils/common';
 
@@ -25,7 +25,6 @@ const ImageUploadArea = ({ label, image, onImageChange }: { label: string, image
 
   const handlePasteClick = async () => {
     try {
-      // Thử sử dụng Clipboard API hiện đại
       const items = await navigator.clipboard.read();
       for (const item of items) {
         for (const type of item.types) {
@@ -38,12 +37,10 @@ const ImageUploadArea = ({ label, image, onImageChange }: { label: string, image
       }
       alert("Không tìm thấy hình ảnh trong Clipboard! Hãy thử Sao chép hình ảnh trước.");
     } catch (err) {
-      // Fallback: Một số trình duyệt yêu cầu tương tác trực tiếp hoặc không hỗ trợ navigator.clipboard.read()
       alert("Trình duyệt không cho phép truy cập Clipboard trực tiếp. Vui lòng sử dụng phím tắt Ctrl+V khi nhấp vào khung ảnh.");
     }
   };
 
-  // Lắng nghe sự kiện paste khi khung hình được focus
   const handlePasteEvent = (e: React.ClipboardEvent) => {
     const items = e.clipboardData?.items;
     if (items) {
@@ -63,7 +60,7 @@ const ImageUploadArea = ({ label, image, onImageChange }: { label: string, image
       <div 
         ref={containerRef}
         onPaste={handlePasteEvent}
-        tabIndex={0} // Cho phép focus để nhận sự kiện paste
+        tabIndex={0} 
         className="border-2 border-dashed border-gray-200 rounded-xl p-4 flex flex-col items-center justify-center min-h-[160px] bg-white relative hover:border-indigo-300 focus:border-indigo-500 focus:ring-2 ring-indigo-50 outline-none transition-all group cursor-pointer"
         title="Nhấp vào đây và nhấn Ctrl+V để dán ảnh"
       >
@@ -111,7 +108,6 @@ export const EditQuestionModal = ({ question, onSave, onClose }: { question: Que
      const oldVal = newOpts[idx];
      newOpts[idx] = newVal;
      
-     // Nếu option đang sửa là đáp án đúng, cập nhật cả trường answer
      if (editedQ.answer === oldVal) {
         setEditedQ({ ...editedQ, options: newOpts, answer: newVal });
      } else {
@@ -143,12 +139,10 @@ export const EditQuestionModal = ({ question, onSave, onClose }: { question: Que
         </div>
         
         <div className="p-8 overflow-y-auto flex-1 space-y-10 bg-white custom-scrollbar">
-           {/* Khu vực ảnh câu hỏi */}
            <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
                 <ImageUploadArea label="HÌNH ẢNH MINH HỌA (CÂU HỎI)" image={editedQ.image} onImageChange={(img) => setEditedQ({...editedQ, image: img})} />
            </div>
 
-           {/* Nội dung chữ câu hỏi */}
            <div>
               <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-3 ml-1">Nội dung câu hỏi (Hỗ trợ Markdown & LaTeX)</label>
               <textarea 
@@ -159,7 +153,6 @@ export const EditQuestionModal = ({ question, onSave, onClose }: { question: Que
               />
            </div>
 
-           {/* Các phương án trả lời */}
            <div>
               <div className="flex items-center justify-between mb-5">
                 <label className="block text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Danh sách phương án & Hình ảnh đi kèm</label>
@@ -192,7 +185,6 @@ export const EditQuestionModal = ({ question, onSave, onClose }: { question: Que
                                 />
                             </div>
                             
-                            {/* Dán ảnh cho từng option */}
                             <div className="pl-11">
                                 <ImageUploadArea 
                                     label={`ẢNH CHO PHƯƠNG ÁN ${String.fromCharCode(65+i)}`} 
@@ -315,7 +307,6 @@ export const ImportModal = ({ onClose, onImport }: { onClose: () => void, onImpo
     if (!content.trim()) return;
     setIsProcessing(true);
     setTimeout(() => { 
-        // parseWordSmart trả về mảng câu hỏi theo đúng thứ tự trong file text
         const res = parseWordSmart(content); 
         if (res.length > 0) { 
             onImport(res); 
@@ -596,7 +587,14 @@ export const PublishExamModal = ({ exam, onClose, onConfirm, onPlay, onCreateNew
     maxViolations: exam.maxViolations || 3,
     allowHints: exam.allowHints || false,
     allowReview: exam.allowReview !== undefined ? exam.allowReview : true,
-    securityCode: exam.securityCode || generateSecurityCode()
+    securityCode: exam.securityCode || generateSecurityCode(),
+    gradingConfig: exam.gradingConfig || {
+      part1Total: 6,
+      part2Total: 4,
+      part3Total: 0,
+      part4Total: 0,
+      groupGradingMethod: 'progressive'
+    } as GradingConfig
   });
 
   const handleSave = async () => {
@@ -604,9 +602,19 @@ export const PublishExamModal = ({ exam, onClose, onConfirm, onPlay, onCreateNew
     onClose();
   };
 
+  const handleGradingChange = (field: keyof GradingConfig, val: any) => {
+    setSettings({
+        ...settings,
+        gradingConfig: {
+            ...settings.gradingConfig,
+            [field]: val
+        }
+    });
+  };
+
   return (
     <div className="fixed inset-0 bg-teal-900/40 backdrop-blur-sm flex items-center justify-center z-[80] animate-fade-in font-poppins p-4">
-      <div className="bg-white rounded-[32px] p-8 w-full max-w-lg shadow-2xl border border-teal-100 relative overflow-hidden">
+      <div className="bg-white rounded-[32px] p-8 w-full max-w-xl shadow-2xl border border-teal-100 relative overflow-hidden custom-scrollbar max-h-[90vh] overflow-y-auto">
         <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-blue-400 to-teal-400"></div>
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-black text-gray-800 flex items-center gap-2">
@@ -616,31 +624,83 @@ export const PublishExamModal = ({ exam, onClose, onConfirm, onPlay, onCreateNew
           <button onClick={onClose} className="text-gray-400 hover:text-red-500 transition-colors p-2 rounded-full"><X className="w-5 h-5"/></button>
         </div>
 
-        <div className="space-y-5">
-           <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100 mb-2">
-              <h3 className="font-bold text-gray-800">{exam.title}</h3>
-              <p className="text-xs text-gray-500">Mã đề: {exam.code} - Lớp: {exam.className}</p>
+        <div className="space-y-6">
+           <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+              <h3 className="font-bold text-gray-800 text-sm truncate">{exam.title}</h3>
+              <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Mã: {exam.code} • Lớp: {exam.className}</p>
            </div>
 
+           {/* Grading Configuration Section */}
+           <div className="p-6 bg-slate-50/50 rounded-[24px] border border-slate-100 space-y-5">
+              <div className="flex items-center gap-2 mb-2">
+                 <Calculator className="w-5 h-5 text-teal-600" />
+                 <h3 className="text-sm font-black text-slate-800 uppercase tracking-tight">Cài đặt thang điểm (Tổng mặc định là 10)</h3>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                 <div className="space-y-1.5">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Tổng điểm P.I (TN)</label>
+                    <input 
+                      type="number" 
+                      step="0.1"
+                      value={settings.gradingConfig.part1Total} 
+                      onChange={e => handleGradingChange('part1Total', parseFloat(e.target.value) || 0)} 
+                      className="w-full p-3 bg-white border border-slate-200 rounded-xl outline-none focus:border-teal-500 font-bold text-slate-700" 
+                    />
+                 </div>
+                 <div className="space-y-1.5">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Tổng điểm P.II (Đúng/Sai)</label>
+                    <input 
+                      type="number" 
+                      step="0.1"
+                      value={settings.gradingConfig.part2Total} 
+                      onChange={e => handleGradingChange('part2Total', parseFloat(e.target.value) || 0)} 
+                      className="w-full p-3 bg-white border border-slate-200 rounded-xl outline-none focus:border-teal-500 font-bold text-slate-700" 
+                    />
+                 </div>
+                 <div className="space-y-1.5">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Tổng điểm P.III (TL Ngắn)</label>
+                    <input 
+                      type="number" 
+                      step="0.1"
+                      value={settings.gradingConfig.part3Total} 
+                      onChange={e => handleGradingChange('part3Total', parseFloat(e.target.value) || 0)} 
+                      className="w-full p-3 bg-white border border-slate-200 rounded-xl outline-none focus:border-teal-500 font-bold text-slate-700" 
+                    />
+                 </div>
+                 <div className="space-y-1.5">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Tổng điểm P.IV (Tự luận)</label>
+                    <input 
+                      type="number" 
+                      step="0.1"
+                      value={settings.gradingConfig.part4Total} 
+                      onChange={e => handleGradingChange('part4Total', parseFloat(e.target.value) || 0)} 
+                      className="w-full p-3 bg-white border border-slate-200 rounded-xl outline-none focus:border-teal-500 font-bold text-slate-700" 
+                    />
+                 </div>
+              </div>
+
+              <div className="space-y-1.5 pt-2">
+                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Cách tính điểm cho mỗi câu P.II (Đúng/Sai)</label>
+                 <select 
+                   value={settings.gradingConfig.groupGradingMethod}
+                   onChange={e => handleGradingChange('groupGradingMethod', e.target.value)}
+                   className="w-full p-3 bg-white border border-slate-200 rounded-xl outline-none focus:border-teal-500 font-bold text-slate-700 text-sm cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20width%3D%2220%22%20height%3D%2220%22%20viewBox%3D%220%200%2020%2020%22%20fill%3D%22none%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cpath%20d%3D%22M5%207L10%2012L15%207%22%20stroke%3D%22%2364748B%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22/%3E%3C/svg%3E')] bg-[length:20px] bg-[right_12px_center] bg-no-repeat"
+                 >
+                    <option value="progressive">Lũy tiến (1ý=10%, 2ý=25%, 3ý=50%, 4ý=100% điểm câu)</option>
+                    <option value="equal">Chia đều (Điểm chia đều cho số lượng ý đúng/sai)</option>
+                 </select>
+              </div>
+           </div>
+
+           {/* Core Timing & Code */}
            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1">
-                 <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Thời gian (phút)</label>
+                 <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Thời gian làm bài (Phút)</label>
                  <input type="number" value={settings.duration} onChange={e => setSettings({...settings, duration: parseInt(e.target.value) || 0})} className="w-full p-3 bg-white border border-gray-200 rounded-xl outline-none focus:border-blue-500 font-bold text-gray-700" />
               </div>
               <div className="space-y-1">
-                 <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Lượt thi tối đa</label>
-                 <input type="number" value={settings.maxAttempts} onChange={e => setSettings({...settings, maxAttempts: parseInt(e.target.value) || 0})} className="w-full p-3 bg-white border border-gray-200 rounded-xl outline-none focus:border-blue-500 font-bold text-gray-700" />
-                 <p className="text-[9px] text-gray-400 ml-1">0 = không giới hạn</p>
-              </div>
-           </div>
-
-           <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1">
-                 <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Vi phạm tối đa</label>
-                 <input type="number" value={settings.maxViolations} onChange={e => setSettings({...settings, maxViolations: parseInt(e.target.value) || 1})} className="w-full p-3 bg-white border border-gray-200 rounded-xl outline-none focus:border-blue-500 font-bold text-gray-700" />
-              </div>
-              <div className="space-y-1">
-                 <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Mã vào thi</label>
+                 <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Mã vào thi (6 ký tự)</label>
                  <div className="flex gap-1">
                     <input type="text" value={settings.securityCode} onChange={e => setSettings({...settings, securityCode: e.target.value.toUpperCase()})} className="w-full p-3 bg-blue-50 border border-blue-100 rounded-xl outline-none focus:border-blue-500 font-black text-blue-700 text-center tracking-widest" maxLength={6} />
                     <button onClick={() => setSettings({...settings, securityCode: generateSecurityCode()})} className="p-3 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors text-gray-500"><RefreshCw className="w-4 h-4"/></button>
@@ -648,28 +708,80 @@ export const PublishExamModal = ({ exam, onClose, onConfirm, onPlay, onCreateNew
               </div>
            </div>
 
-           <div className="flex flex-col gap-3 pt-2">
-              <label className="flex items-center gap-3 cursor-pointer group">
-                 <div onClick={() => setSettings({...settings, allowReview: !settings.allowReview})} className={`w-10 h-6 rounded-full transition-colors relative ${settings.allowReview ? 'bg-blue-500' : 'bg-gray-300'}`}>
-                    <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${settings.allowReview ? 'left-5' : 'left-1'}`}></div>
+           {/* ADVANCED CONFIG GRID (2x2) */}
+           <div className="grid grid-cols-2 gap-3">
+              {/* Hỗ trợ AI */}
+              <button 
+                onClick={() => setSettings({...settings, allowHints: !settings.allowHints})}
+                className={`p-4 rounded-2xl border-2 flex flex-col gap-2 transition-all text-left ${settings.allowHints ? 'border-purple-200 bg-purple-50' : 'border-gray-100 bg-white'}`}
+              >
+                 <div className="flex items-center justify-between w-full">
+                    <Sparkles className={`w-5 h-5 ${settings.allowHints ? 'text-purple-600' : 'text-gray-300'}`} />
+                    <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${settings.allowHints ? 'bg-purple-600 border-purple-600' : 'border-gray-200'}`}>
+                        {settings.allowHints && <Check className="w-3.5 h-3.5 text-white" strokeWidth={4} />}
+                    </div>
                  </div>
-                 <span className="text-sm font-bold text-gray-700">Cho phép xem lại đáp án sau khi thi</span>
-              </label>
+                 <span className={`text-[11px] font-black uppercase tracking-tight ${settings.allowHints ? 'text-purple-800' : 'text-gray-500'}`}>Hỗ trợ AI Gợi ý</span>
+              </button>
+
+              {/* Xem kết quả */}
+              <button 
+                onClick={() => setSettings({...settings, allowReview: !settings.allowReview})}
+                className={`p-4 rounded-2xl border-2 flex flex-col gap-2 transition-all text-left ${settings.allowReview ? 'border-teal-200 bg-teal-50' : 'border-gray-100 bg-white'}`}
+              >
+                 <div className="flex items-center justify-between w-full">
+                    <Eye className={`w-5 h-5 ${settings.allowReview ? 'text-teal-600' : 'text-gray-300'}`} />
+                    <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${settings.allowReview ? 'bg-teal-600 border-teal-600' : 'border-gray-200'}`}>
+                        {settings.allowReview && <Check className="w-3.5 h-3.5 text-white" strokeWidth={4} />}
+                    </div>
+                 </div>
+                 <span className={`text-[11px] font-black uppercase tracking-tight ${settings.allowReview ? 'text-teal-800' : 'text-gray-500'}`}>Cho phép xem KQ</span>
+              </button>
+
+              {/* Số lần được phép làm bài */}
+              <div className="p-4 rounded-2xl border-2 border-gray-100 bg-white flex flex-col gap-2 transition-all">
+                 <div className="flex items-center justify-between w-full">
+                    <RotateCcw className="w-5 h-5 text-indigo-500" />
+                    <input 
+                        type="number" 
+                        min="0"
+                        value={settings.maxAttempts} 
+                        onChange={e => setSettings({...settings, maxAttempts: parseInt(e.target.value) || 0})}
+                        className="w-12 text-right bg-indigo-50 text-indigo-700 font-black text-xs rounded p-1 outline-none border border-indigo-100"
+                    />
+                 </div>
+                 <div className="flex flex-col">
+                    <span className="text-[11px] font-black text-slate-500 uppercase tracking-tight">Số lần làm bài</span>
+                    <span className="text-[8px] text-slate-400 font-bold">(0 = Không giới hạn)</span>
+                 </div>
+              </div>
+
+              {/* Giới hạn vi phạm */}
+              <div className="p-4 rounded-2xl border-2 border-gray-100 bg-white flex flex-col gap-2 transition-all">
+                 <div className="flex items-center justify-between w-full">
+                    <ShieldAlert className="w-5 h-5 text-red-500" />
+                    <input 
+                        type="number" 
+                        min="1"
+                        value={settings.maxViolations} 
+                        onChange={e => setSettings({...settings, maxViolations: parseInt(e.target.value) || 1})}
+                        className="w-12 text-right bg-red-50 text-red-700 font-black text-xs rounded p-1 outline-none border border-red-100"
+                    />
+                 </div>
+                 <div className="flex flex-col">
+                    <span className="text-[11px] font-black text-slate-500 uppercase tracking-tight">Giới hạn vi phạm</span>
+                    <span className="text-[8px] text-slate-400 font-bold">(Tự nộp bài khi đạt ngưỡng)</span>
+                 </div>
+              </div>
            </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-3 mt-10">
-           <button onClick={handleSave} className="py-4 bg-blue-600 text-white rounded-2xl font-black shadow-lg shadow-blue-100 hover:bg-blue-700 transition-all transform hover:-translate-y-1 flex items-center justify-center gap-2">
+        <div className="grid grid-cols-2 gap-4 mt-10">
+           <button onClick={handleSave} className="py-4 bg-blue-600 text-white rounded-2xl font-black shadow-lg hover:bg-blue-700 transition-all transform hover:-translate-y-1 flex items-center justify-center gap-2">
               <Check className="w-5 h-5"/> Lưu thiết lập
            </button>
-           <button onClick={onPlay} className="py-4 bg-teal-600 text-white rounded-2xl font-black shadow-lg shadow-teal-100 hover:bg-teal-700 transition-all transform hover:-translate-y-1 flex items-center justify-center gap-2">
-              <PlayCircle className="w-5 h-5"/> Thi thử ngay
-           </button>
-        </div>
-        
-        <div className="mt-4 pt-4 border-t border-gray-50 flex justify-center">
-           <button onClick={onCreateNew} className="text-sm font-bold text-blue-500 hover:text-blue-700 flex items-center gap-1">
-              <Plus className="w-4 h-4"/> Tạo thêm đề thi khác
+           <button onClick={onPlay} className="py-4 bg-teal-600 text-white rounded-2xl font-black shadow-lg hover:bg-teal-700 transition-all transform hover:-translate-y-1 flex items-center justify-center gap-2">
+              <PlayCircle className="w-5 h-5"/> Vào thi thử
            </button>
         </div>
       </div>
