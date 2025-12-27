@@ -31,7 +31,7 @@ const DASHBOARD_STYLES = `
     font-weight: 500;
     transition: all 0.2s ease;
   }
-  
+  /* Stat Card Styles */
   .stat-card-3d {
     background: #ffffff;
     border-radius: 32px;
@@ -42,8 +42,11 @@ const DASHBOARD_STYLES = `
     border: 1px solid #eef2f6;
     box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.12);
     position: relative;
-    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    cursor: default;
   }
+
+ 
 
   .stat-card-3d::before {
     content: '';
@@ -56,7 +59,37 @@ const DASHBOARD_STYLES = `
     border-radius: 32px;
     z-index: -1;
     box-shadow: 4px 4px 15px rgba(13, 148, 136, 0.3);
+    transition: all 0.4s ease;
   }
+  
+  .stat-card-3d:hover::before {
+    bottom: -10px;
+    right: -10px;
+    transform: rotate(1.5deg);
+    opacity: 0.8;
+  }
+
+  /* Exam List Card */
+  .exam-card {
+    background: white;
+    border-radius: 32px;
+    border: 1px solid #f1f5f9;
+    padding: 32px;
+    transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 20px 40px -12px rgba(15, 23, 42, 0.12);
+  }
+
+  .exam-card:hover {
+    transform: translateY(-12px) rotateZ(1.5deg) scale(1.02);
+    box-shadow: 0 35px 70px -15px rgba(15, 23, 42, 0.2);
+    border-color: #0d948860;
+  }
+
+ 
 
   .stat-icon-box-3d {
     width: 72px;
@@ -68,18 +101,7 @@ const DASHBOARD_STYLES = `
     flex-shrink: 0;
   }
 
-  .exam-card {
-    background: white;
-    border-radius: 24px;
-    border: 2px solid #f1f5f9;
-    padding: 24px;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    position: relative;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    box-shadow: 0 10px 25px -8px rgba(15, 23, 42, 0.08);
-  }
+  
 
   .rank-badge {
     width: 32px;
