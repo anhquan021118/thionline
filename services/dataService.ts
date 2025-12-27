@@ -2,15 +2,48 @@
 import { supabase } from './supabase';
 import { ExamConfig, Question, StudentResult, Student } from '../types';
 
+// Dấu phân cách đặc biệt để đóng gói dữ liệu ảnh vào trường văn bản
+const IMG_PACK_PREFIX = '|||QUIZ_IMG_V1|||';
+
+const packImg = (text: string, img?: string | null): string => {
+    if (!img) return text || '';
+    // Định dạng: |||PREFIX|||base64_data|||PREFIX|||nội_dung_văn_bản
+    return `${IMG_PACK_PREFIX}${img}${IMG_PACK_PREFIX}${text || ''}`;
+};
+
+const unpackImg = (raw: string): { text: string; image: string | null } => {
+    if (!raw || typeof raw !== 'string' || !raw.includes(IMG_PACK_PREFIX)) {
+        return { text: raw || '', image: null };
+    }
+    const parts = raw.split(IMG_PACK_PREFIX);
+    // Kết quả phân tách: [mảng_trống, dữ_liệu_ảnh, nội_dung_văn_bản]
+    return { 
+        image: parts[1] || null, 
+        text: parts[2] || '' 
+    };
+};
+
 export const dataService = {
     // --- EXAMS & QUESTIONS ---
     async getExams(): Promise<ExamConfig[]> {
+        // Chỉ select các cột chắc chắn tồn tại để tránh lỗi schema cache
         const { data: exams, error } = await supabase
             .from('exams')
-            .select(`*, questions (*), results (*)`)
+            .select(`
+                id, code, title, created_at, duration, security_code, 
+                class_name, max_attempts, max_violations, allow_hints, 
+                allow_review, grading_config,
+                questions (
+                    id, type, section, question_text, options, answer, sub_questions, order_index
+                ),
+                results (*)
+            `)
             .order('created_at', { ascending: false });
 
-        if (error) throw new Error(error.message);
+        if (error) {
+            console.error("Supabase fetch exams error:", error);
+            throw new Error(error.message);
+        }
         
         return (exams || []).map(e => ({
             id: e.id,
@@ -25,22 +58,31 @@ export const dataService = {
             allowHints: e.allow_hints,
             allowReview: e.allow_review,
             gradingConfig: e.grading_config,
-            questions: (e.questions || []).map((q: any) => ({
-                id: q.id,
-                type: q.type,
-                section: q.section,
-                question: q.question_text,
-                options: q.options,
-                answer: q.answer,
-                subQuestions: q.sub_questions 
-            })).sort((a: any, b: any) => (a.order_index || 0) - (b.order_index || 0)),
+            questions: (e.questions || []).map((q: any) => {
+                // Giải nén ảnh từ question_text
+                const qUnpacked = unpackImg(q.question_text);
+                // Giải nén ảnh từ từng phần tử trong mảng options
+                const optionsWithImages = (q.options || []).map((opt: string) => unpackImg(opt));
+                
+                return {
+                    id: q.id,
+                    type: q.type,
+                    section: q.section,
+                    question: qUnpacked.text,
+                    image: qUnpacked.image, 
+                    options: optionsWithImages.map((o: any) => o.text),
+                    optionImages: optionsWithImages.map((o: any) => o.image), 
+                    answer: q.answer,
+                    subQuestions: q.sub_questions 
+                };
+            }).sort((a: any, b: any) => (a.order_index || 0) - (b.order_index || 0)),
             results: (e.results || []).map((r: any) => ({
                 id: r.id,
                 name: r.student_name,
                 className: r.class_name,
                 score: r.score,
                 total: r.total_points,
-                time_spent: r.time_spent,
+                timeSpent: r.time_spent,
                 violations: r.violations,
                 counts: r.counts,
                 answers: r.answers,
@@ -50,14 +92,17 @@ export const dataService = {
     },
 
     async saveExam(exam: Partial<ExamConfig>, questions: Question[]): Promise<string> {
-        const isUpdate = !!exam.id && exam.id.includes('-');
+        const isUpdate = !!exam.id && (exam.id.includes('-') || exam.id.length > 20);
+        
         const examPayload = {
             title: exam.title,
             code: exam.code,
             security_code: exam.securityCode,
             class_name: exam.className,
             duration: exam.duration,
+            // Fixed typo: changed exam.max_attempts to exam.maxAttempts to match ExamConfig interface
             max_attempts: exam.maxAttempts || 0,
+            // Fixed typo: changed exam.max_violations to exam.maxViolations to match ExamConfig interface
             max_violations: exam.maxViolations || 1,
             allow_hints: exam.allowHints || false,
             allow_review: exam.allowReview !== undefined ? exam.allowReview : true,
@@ -65,29 +110,41 @@ export const dataService = {
         };
 
         let examId = exam.id;
+
         if (isUpdate) {
-            const { error } = await supabase.from('exams').update(examPayload).eq('id', exam.id);
-            if (error) throw new Error(error.message);
+            const { error: examError } = await supabase.from('exams').update(examPayload).eq('id', exam.id);
+            if (examError) throw new Error("Lỗi cập nhật đề thi: " + examError.message);
         } else {
-            const { data, error } = await supabase.from('exams').insert([examPayload]).select().single();
-            if (error) throw new Error(error.message);
+            const { data, error: examError } = await supabase.from('exams').insert([examPayload]).select().single();
+            if (examError) throw new Error("Lỗi tạo đề thi mới: " + examError.message);
             examId = data.id;
         }
 
         if (examId) {
+            // Xóa câu hỏi cũ trước khi chèn mới
             await supabase.from('questions').delete().eq('exam_id', examId);
+
             if (questions && questions.length > 0) {
                 const questionsPayload = questions.map((q, idx) => ({
                     exam_id: examId,
                     type: q.type,
                     section: q.section || '',
-                    question_text: q.question,
-                    options: q.options || [],
+                    // Đóng gói ảnh vào question_text vì cột 'image' không tồn tại
+                    question_text: packImg(q.question, q.image),
+                    // Đóng gói ảnh cho từng phương án vào mảng options
+                    options: (q.options || []).map((opt, i) => packImg(opt, q.optionImages?.[i])),
                     answer: q.answer || '',
                     sub_questions: q.subQuestions || [],
                     order_index: idx
                 }));
-                await supabase.from('questions').insert(questionsPayload);
+
+                const { error: qError } = await supabase.from('questions').insert(questionsPayload);
+                if (qError) {
+                    console.error("Insert questions error details:", qError);
+                    // Sửa lỗi hiển thị [object Object] bằng cách lấy message hoặc stringify
+                    const errorMsg = qError.message || JSON.stringify(qError);
+                    throw new Error("Lỗi lưu danh sách câu hỏi: " + errorMsg);
+                }
             }
         }
         return examId!;
@@ -105,161 +162,61 @@ export const dataService = {
                 supabase.from('students').select('*'),
                 supabase.from('profiles').select('*').eq('role', 'student')
             ]);
-
             const rawList: Student[] = [];
-
-            // Thu thập từ bảng students (nguồn chính cho metadata và email)
-            if (stRes.data) {
-                stRes.data.forEach(s => {
-                    rawList.push({
-                        id: s.id,
-                        name: s.name,
-                        className: s.class_name,
-                        email: s.email ? s.email.toLowerCase().trim() : null,
-                        isApproved: s.is_approved ?? false
-                    });
-                });
-            }
-
-            // Thu thập từ bảng profiles (dành cho người dùng đã đăng ký Auth)
-            if (profRes.data) {
-                profRes.data.forEach(p => {
-                    rawList.push({
-                        id: p.id, // Đây là UUID thực
-                        name: p.full_name || 'Người dùng mới',
-                        className: p.class_name || 'Chưa xếp lớp',
-                        email: null, 
-                        isApproved: p.is_approved ?? false
-                    });
-                });
-            }
-
-            // Gộp dữ liệu thông minh bằng EMAIL
+            if (stRes.data) stRes.data.forEach(s => rawList.push({ id: s.id, name: s.name, className: s.class_name, email: s.email?.toLowerCase().trim() || null, isApproved: s.is_approved ?? false }));
+            if (profRes.data) profRes.data.forEach(p => rawList.push({ id: p.id, name: p.full_name || 'Người dùng mới', className: p.class_name || 'Chưa xếp lớp', email: null, isApproved: p.is_approved ?? false }));
             const emailMap = new Map<string, Student>();
             const nameMap = new Map<string, Student>();
-
             rawList.forEach(s => {
-                if (s.email) {
-                    const existing = emailMap.get(s.email);
-                    if (!existing || s.id.length > existing.id.length) {
-                        // Ưu tiên bản ghi có ID dài hơn (UUID)
-                        emailMap.set(s.email, { ...(existing || {}), ...s });
-                    }
-                } else {
-                    nameMap.set(s.name.toLowerCase().trim(), s);
-                }
+                if (s.email) { const existing = emailMap.get(s.email); if (!existing || s.id.length > existing.id.length) emailMap.set(s.email, { ...(existing || {}), ...s }); } 
+                else { nameMap.set(s.name.toLowerCase().trim(), s); }
             });
-
-            // Kết hợp lại thành danh sách cuối
             const finalResults = Array.from(emailMap.values());
-            // Thêm những người không có email (import lỗi hoặc chưa điền)
-            nameMap.forEach((s, name) => {
-                if (!finalResults.find(f => f.name.toLowerCase().trim() === name)) {
-                    finalResults.push(s);
-                }
-            });
-
+            nameMap.forEach((s, name) => { if (!finalResults.find(f => f.name.toLowerCase().trim() === name)) finalResults.push(s); });
             return finalResults.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
-        } catch (err) {
-            console.error("Lỗi getStudents:", err);
-            return [];
-        }
+        } catch (err) { console.error("Lỗi getStudents:", err); return []; }
     },
 
     async saveStudent(student: Student) {
         const email = student.email?.trim().toLowerCase() || null;
-        const payload = { 
-            name: student.name, 
-            class_name: student.className, 
-            email: email,
-            is_approved: student.isApproved ?? false
-        };
-
-        // Nếu là ID tạm thời và có email, kiểm tra xem đã có UUID chưa
+        const payload = { name: student.name, class_name: student.className, email: email, is_approved: student.isApproved ?? false };
         if (email && student.id.length < 20) {
             const { data: profile } = await supabase.from('profiles').select('id').eq('full_name', student.name).maybeSingle();
-            if (profile) student.id = profile.id; // Chuyển sang dùng UUID nếu tìm thấy profile khớp tên
+            if (profile) student.id = profile.id;
         }
-
-        // 1. Cập nhật bảng students
         if (email) {
             const { data: existing } = await supabase.from('students').select('id').eq('email', email).maybeSingle();
-            if (existing) {
-                await supabase.from('students').update(payload).eq('id', existing.id);
-            } else {
-                await supabase.from('students').insert([{ ...payload, id: student.id }]);
-            }
+            if (existing) await supabase.from('students').update(payload).eq('id', existing.id);
+            else await supabase.from('students').insert([{ ...payload, id: student.id }]);
         } else {
              await supabase.from('students').update(payload).eq('id', student.id);
         }
-
-        // 2. Đồng bộ vào bảng profiles nếu ID là UUID
         if (student.id.length > 20) {
-            const { error: syncError } = await supabase.from('profiles').update({
-                full_name: payload.name,
-                class_name: payload.class_name,
-                is_approved: payload.is_approved
-            }).eq('id', student.id);
-            
-            if (syncError) console.warn("Lỗi đồng bộ bảng profiles:", syncError.message);
+            await supabase.from('profiles').update({ full_name: payload.name, class_name: payload.class_name, is_approved: payload.is_approved }).eq('id', student.id);
         }
     },
 
     async updateStudentStatus(email: string, id: string, isApproved: boolean) {
         const cleanEmail = email?.toLowerCase().trim();
         const updateData = { is_approved: isApproved };
-        
-        console.log(`Đang đồng bộ trạng thái: ${cleanEmail || id} -> ${isApproved}`);
-
         const tasks = [];
-        
-        // 1. Cập nhật bằng Email cho bảng students (luôn chính xác nhất nếu có email)
-        if (cleanEmail) {
-            tasks.push(supabase.from('students').update(updateData).eq('email', cleanEmail));
-        } else {
-            tasks.push(supabase.from('students').update(updateData).eq('id', id));
-        }
-        
-        // 2. Cập nhật bằng ID (UUID) cho bảng profiles
-        if (id && id.length > 20) {
-            tasks.push(supabase.from('profiles').update(updateData).eq('id', id));
-        }
-
+        if (cleanEmail) tasks.push(supabase.from('students').update(updateData).eq('email', cleanEmail));
+        else tasks.push(supabase.from('students').update(updateData).eq('id', id));
+        if (id && id.length > 20) tasks.push(supabase.from('profiles').update(updateData).eq('id', id));
         if (tasks.length === 0) return;
-
         const results = await Promise.all(tasks);
-        
-        for (const res of results) {
-            if (res.error) {
-                const message = res.error.message || "Lỗi không xác định";
-                throw new Error(`Lỗi đồng bộ trạng thái: ${message}`);
-            }
-        }
-        
-        console.log("Đồng bộ trạng thái thành công.");
+        for (const res of results) if (res.error) throw new Error(`Lỗi đồng bộ trạng thái: ${res.error.message}`);
     },
 
     async deleteStudent(id: string, email?: string) {
         const cleanEmail = email?.toLowerCase().trim();
         const tasks = [];
-
-        if (cleanEmail) {
-            tasks.push(supabase.from('students').delete().eq('email', cleanEmail));
-        }
-
+        if (cleanEmail) tasks.push(supabase.from('students').delete().eq('email', cleanEmail));
         if (id) {
             tasks.push(supabase.from('students').delete().eq('id', id));
-            if (id.length > 20) {
-                tasks.push(supabase.from('profiles').delete().eq('id', id));
-            }
+            if (id.length > 20) tasks.push(supabase.from('profiles').delete().eq('id', id));
         }
-
-        const results = await Promise.all(tasks);
-        const errors = results.filter(r => r.error).map(r => r.error?.message);
-        
-        if (errors.length > 0) {
-            console.error("Lỗi xóa học sinh:", errors);
-        }
+        await Promise.all(tasks);
     },
 
     // --- RESULTS ---

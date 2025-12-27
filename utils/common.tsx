@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Question, StudentResult } from '../types';
 
@@ -118,17 +119,17 @@ const CodeBlock: React.FC<{ code: string, language: string }> = ({ code, languag
   const prismLang = language.toLowerCase();
 
   return (
-    <div className="my-4 rounded-xl overflow-hidden border border-gray-700 bg-[#1e1e1e] text-[#d4d4d4] font-mono text-sm shadow-xl block w-full text-left relative z-0">
-      <div className="flex items-center justify-between px-4 py-2 bg-[#252526] border-b border-gray-700 select-none">
+    <div className="my-6 rounded-xl overflow-hidden border border-gray-700 bg-[#1e1e1e] text-[#d4d4d4] font-mono text-sm shadow-xl block w-full text-left relative z-0">
+      <div className="flex items-center justify-between px-4 py-2 bg-[#2d2d2d] border-b border-gray-700 select-none">
         <div className="flex gap-1.5">
-          <div className="w-3 h-3 rounded-full bg-[#ff5f56]"></div>
-          <div className="w-3 h-3 rounded-full bg-[#ffbd2e]"></div>
-          <div className="w-3 h-3 rounded-full bg-[#27c93f]"></div>
+          <div className="w-3 h-3 rounded-full bg-[#ff5f56] shadow-sm"></div>
+          <div className="w-3 h-3 rounded-full bg-[#ffbd2e] shadow-sm"></div>
+          <div className="w-3 h-3 rounded-full bg-[#27c93f] shadow-sm"></div>
         </div>
-        <span className="text-[10px] font-bold text-gray-500 tracking-widest">{displayLang}</span>
+        <span className="text-[10px] font-black text-gray-400 tracking-widest uppercase">{displayLang}</span>
       </div>
       <pre className={`p-5 overflow-x-auto m-0 language-${prismLang}`} style={{ backgroundColor: 'transparent' }}>
-        <code ref={codeRef} className={`language-${prismLang}`} style={{ whiteSpace: 'pre', display: 'block' }}>{code}</code> 
+        <code ref={codeRef} className={`language-${prismLang}`} style={{ whiteSpace: 'pre', display: 'block', tabSize: 4 }}>{code.trim()}</code> 
       </pre>
     </div>
   );
@@ -191,9 +192,8 @@ export const MathRenderer: React.FC<{ text: string, allowMarkdown?: boolean }> =
                 let language = 'python';
                 let code = rawContent;
 
-                const commonLangs = ['python', 'javascript', 'js', 'java', 'cpp', 'csharp', 'html', 'css', 'sql', 'php', 'ruby', 'swift', 'go', 'rust', 'ts', 'typescript', 'c'];
+                const commonLangs = ['python', 'javascript', 'js', 'java', 'cpp', 'csharp', 'html', 'css', 'sql', 'php', 'ruby', 'swift', 'go', 'rust', 'ts', 'typescript', 'c', 'bash', 'xml'];
                 
-                // Thuật toán tách ngôn ngữ thông minh
                 const firstLineBreak = rawContent.indexOf('\n');
                 if (firstLineBreak > -1) {
                     const firstLine = rawContent.substring(0, firstLineBreak).trim().toLowerCase();
@@ -201,21 +201,23 @@ export const MathRenderer: React.FC<{ text: string, allowMarkdown?: boolean }> =
                         language = firstLine;
                         code = rawContent.substring(firstLineBreak + 1);
                     }
-                } else {
-                    // Xử lý khi ngôn ngữ dính liền mã nguồn: ```pythoni = 0
-                    for (const lang of commonLangs) {
-                        if (rawContent.toLowerCase().startsWith(lang)) {
-                            language = lang;
-                            code = rawContent.substring(lang.length);
-                            break;
-                        }
-                    }
                 }
                 
                 return <CodeBlock key={i} code={code} language={language} />;
             }
             
-            return <React.Fragment key={i}>{renderInlineMarkdown(part)}</React.Fragment>;
+            // Xử lý xuống dòng cho text bình thường
+            const lines = part.split('\n');
+            return (
+              <React.Fragment key={i}>
+                {lines.map((line, lIdx) => (
+                  <React.Fragment key={lIdx}>
+                    {renderInlineMarkdown(line)}
+                    {lIdx < lines.length - 1 && <br />}
+                  </React.Fragment>
+                ))}
+              </React.Fragment>
+            );
         })}
      </span>
   );
@@ -229,12 +231,10 @@ export const SmartTextRenderer = ({ text }: { text: string }) => {
     return (
         <div className="space-y-1.5 text-gray-700 leading-relaxed w-full">
             {parts.map((part, pIdx) => {
-                // Nếu là code block, render nguyên khối
                 if (part.startsWith('```') && part.endsWith('```')) {
                     return <MathRenderer key={pIdx} text={part} allowMarkdown={true} />;
                 }
 
-                // Nếu là text thường, xử lý xuống dòng và format khác
                 const lines = part.split('\n');
                 return lines.map((line, idx) => {
                     const trimmed = line.trim();
@@ -328,7 +328,7 @@ export const parseWordSmart = (content: string): Question[] => {
            newQuestions.push(currentQ as Question);
        }
        const qText = trimmedLine.replace(qStartRegex, "").trim();
-       currentQ = { id: Date.now() + Math.random(), section: currentSection, question: qText, type: 'choice', options: [], subQuestions: [], answer: '' };
+       currentQ = { id: Date.now() + Math.random(), section: currentSection, question: qText, type: 'choice', options: [], subQuestions: [], answer: '', mixQuestion: true, mixOptions: true };
        lastTarget = 'question';
        return;
     }
@@ -393,12 +393,6 @@ export const parseStudentImport = (text: string) => {
   }).filter(Boolean);
 };
 
-// --- EXPORT RESULTS TO EXCEL ---
-/**
- * Xuất danh sách kết quả học sinh ra file Excel sử dụng thư viện XLSX.
- * @param results Danh sách kết quả cần xuất
- * @param title Tên đề thi để đặt tên file
- */
 export const exportResultsToExcel = (results: StudentResult[], title: string) => {
   const XLSX = (window as any).XLSX;
   if (!XLSX) {

@@ -4,7 +4,7 @@ import { ExamConfig, StudentResult, Student, User, Question } from './types';
 import { DashboardLayout, ExamList, PublishView, ExamEditor, ScoreManager, StudentManager, DashboardOverview } from './components/Dashboard';
 import { CreateExamModal, AssignExamModal, PublishExamModal } from './components/Modals';
 import { StartScreen, QuizScreen, ResultScreen } from './components/Player';
-import { authService } from "./services/auth";
+import { authService } from './services/auth';
 import { dataService } from './services/dataService';
 import { LoginModal } from './components/AuthModals';
 import { Loader2, AlertCircle } from 'lucide-react';
@@ -140,15 +140,9 @@ export default function App() {
   const handleEditStudent = async (s: Student & { password?: string }) => {
     try {
         setLoading(true);
-        // Cập nhật thông tin cơ bản trong database
         await dataService.saveStudent(s);
-        
-        // Nếu giáo viên yêu cầu đặt lại mật khẩu
         if (s.email && s.password) {
-            // Lưu ý: Logic cập nhật mật khẩu Auth đòi hỏi quyền quản trị 
-            // Ở đây ta gọi phương thức reset để mô phỏng
             await authService.adminUpdateStudentPassword(s.email, s.password);
-            alert("Thông tin học sinh đã được cập nhật. Hệ thống đã gửi yêu cầu đặt lại mật khẩu tới email của học sinh.");
         } else {
             alert("Đã cập nhật thông tin học sinh thành công!");
         }
@@ -230,10 +224,21 @@ export default function App() {
       {view === 'exam' && currentExam && (
         <>
           {examState === 'start' && <StartScreen exam={currentExam} initialCode={urlCode} user={currentUser} studentsList={students} onStart={(n:any, c:any) => { setStudentInfo({name:n, className:c}); setOfState('playing'); }} onBack={() => setView('dashboard')} />}
-          {examState === 'playing' && <QuizScreen examId={currentExam.id} questions={currentExam.questions} duration={currentExam.duration} studentName={studentInfo.name} className={studentInfo.className} onFinish={async (answers: any, time: number, viol: number) => { 
-              const resData: any = { id: Date.now().toString(), name: studentInfo.name, className: studentInfo.className, score: 0, total: 10, date: new Date().toLocaleString(), timeSpent: time, violations: viol, counts: {correct: 0, wrong: 0, empty: 0}, answers };
-              setOfResult(resData); setOfState('finished'); try { await dataService.submitResult(resData, currentExam.id); await refreshData(); } catch(e){}
-          }} maxViolations={currentExam.maxViolations} onCancel={() => setView('dashboard')} />}
+          {/* Fixed QuizScreen call to include gradingConfig and satisfy TS requirements for onCancel */}
+          {examState === 'playing' && <QuizScreen 
+            examId={currentExam.id} 
+            questions={currentExam.questions} 
+            duration={currentExam.duration} 
+            studentName={studentInfo.name} 
+            className={studentInfo.className} 
+            gradingConfig={currentExam.gradingConfig}
+            onFinish={async (answers: any, time: number, viol: number, counts: any, score: number) => { 
+                const resData: any = { id: Date.now().toString(), name: studentInfo.name, className: studentInfo.className, score: score, total: currentExam.questions.length, date: new Date().toLocaleString(), timeSpent: time, violations: viol, counts, answers };
+                setOfResult(resData); setOfState('finished'); try { await dataService.submitResult(resData, currentExam.id); await refreshData(); } catch(e){}
+            }} 
+            maxViolations={currentExam.maxViolations} 
+            onCancel={() => setView('dashboard')} 
+          />}
           {examState === 'finished' && <ResultScreen {...examResult} questions={currentExam.questions} allowReview={currentExam.allowReview} onRetry={() => setView('dashboard')} />}
         </>
       )}

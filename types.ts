@@ -5,6 +5,7 @@ export interface SubQuestion {
   id: string;
   content: string;
   correctAnswer: boolean;
+  image?: string;
 }
 
 export interface Question {
@@ -12,16 +13,20 @@ export interface Question {
   type: QuestionType;
   section?: string;
   question: string;
+  image?: string; // Base64 string for question image
   options?: string[];
+  optionImages?: string[]; // Base64 strings for each option
   answer?: string;
   subQuestions?: SubQuestion[];
+  mixQuestion?: boolean;
+  mixOptions?: boolean;
 }
 
 export interface StudentResult {
   id: string;
   name: string;
   className: string;
-  email?: string; // Added email property
+  email?: string;
   score: number;
   total: number;
   date?: string;
@@ -82,5 +87,4 @@ export interface User {
   createdAt?: string;
 }
 
-// Khởi tạo mảng trống cho dự án mới
 export const INITIAL_QUESTIONS: Question[] = [];
