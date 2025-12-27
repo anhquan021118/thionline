@@ -42,11 +42,8 @@ const DASHBOARD_STYLES = `
     border: 1px solid #eef2f6;
     box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.12);
     position: relative;
-    transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    cursor: default;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
   }
-
-  
 
   .stat-card-3d::before {
     content: '';
@@ -59,14 +56,6 @@ const DASHBOARD_STYLES = `
     border-radius: 32px;
     z-index: -1;
     box-shadow: 4px 4px 15px rgba(13, 148, 136, 0.3);
-    transition: all 0.4s ease;
-  }
-  
-  .stat-card-3d:hover::before {
-    bottom: -10px;
-    right: -10px;
-    transform: rotate(1.5deg);
-    opacity: 0.8;
   }
 
   .stat-icon-box-3d {
@@ -77,30 +66,19 @@ const DASHBOARD_STYLES = `
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-  }
-  
-  .stat-card-3d:hover .stat-icon-box-3d {
-    transform: scale(1.1) rotate(8deg);
   }
 
   .exam-card {
     background: white;
-    border-radius: 32px;
-    border: 1px solid #f1f5f9;
-    padding: 32px;
-    transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    border-radius: 24px;
+    border: 2px solid #f1f5f9;
+    padding: 24px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    box-shadow: 0 20px 40px -12px rgba(15, 23, 42, 0.12);
-  }
-
-  .exam-card:hover {
-    transform: translateY(-12px) rotateZ(1.5deg) scale(1.02);
-    box-shadow: 0 35px 70px -15px rgba(15, 23, 42, 0.2);
-    border-color: #0d948860;
+    box-shadow: 0 10px 25px -8px rgba(15, 23, 42, 0.08);
   }
 
   .rank-badge {
@@ -374,14 +352,16 @@ export const ExamList = ({ exams, onSelectExam, onDeleteExam, onPlayExam, onPubl
             {exams.map((exam: any) => (
                 <div key={exam.id} className="exam-card">
                     <div className="flex justify-between items-start mb-6">
-                        <span className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest ${exam.securityCode ? 'bg-[#009688] text-white shadow-sm' : 'bg-gray-100 text-gray-500'}`}>{exam.securityCode ? 'Đang mở thi' : 'Bản nháp'}</span>
-                        {exam.securityCode && <BookOpen className="w-5 h-5 text-blue-500" strokeWidth={1.5} />}
+                        <span className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest ${exam.securityCode ? 'bg-teal-100 text-teal-700 border border-teal-200' : 'bg-gray-100 text-gray-500'}`}>{exam.securityCode ? 'Đang mở thi' : 'Bản nháp'}</span>
+                        {exam.securityCode && <span className="bg-blue-50 text-blue-700 px-3 py-1 rounded-lg text-[11px] font-black tracking-widest font-mono">{exam.securityCode}</span>}
                     </div>
-                    <h3 className="text-2xl font-black text-slate-800 mb-6 leading-tight truncate">{exam.title}</h3>
-                    <div className="flex flex-col gap-3 text-[13px] font-black text-slate-400 uppercase tracking-wide mb-8">
-                        <span className="flex items-center gap-3"><Clock className="w-5 h-5 text-[#009688]" strokeWidth={2.5} /> {exam.duration} Phút</span>
-                        <span className="flex items-center gap-3"><List className="w-5 h-5 text-[#009688]" strokeWidth={2.5} /> {exam.questions?.length || 0} Câu hỏi</span>
-                        <span className="flex items-center gap-3"><GraduationCap className="w-5 h-5 text-[#009688]" strokeWidth={2.5} /> Lớp {exam.className}</span>
+                    <h3 className="text-xl font-black text-slate-800 mb-4 truncate">{exam.title}</h3>
+                    <div className="flex flex-col gap-2 text-xs font-bold text-slate-400 uppercase tracking-widest mb-6">
+                        <span className="flex items-center gap-2"><Clock className="w-4 h-4 text-teal-500" /> {exam.duration} Phút</span>
+                        <span className="flex items-center gap-2"><List className="w-4 h-4 text-teal-500" /> {exam.questions?.length || 0} Câu hỏi</span>
+                        <span className="flex items-center gap-2"><GraduationCap className="w-4 h-4 text-teal-500" /> Lớp {exam.className}</span>
+                        <span className="flex items-center gap-2"><RefreshCw className="w-4 h-4 text-teal-500" /> Lượt thi tối đa: {exam.maxAttempts === 0 ? 'Vô hạn' : exam.maxAttempts}</span>
+                        <span className="flex items-center gap-2"><ShieldAlert className="w-4 h-4 text-teal-500" /> Vi phạm tối đa: {exam.maxViolations || 1}</span>
                     </div>
                     <div className="mt-auto grid grid-cols-2 gap-3 pt-6 border-t border-slate-50">
                         <button onClick={() => onSelectExam(exam)} className="p-2 bg-slate-50 text-slate-600 rounded-xl font-bold text-sm hover:bg-slate-100 flex items-center justify-center gap-2 transition-colors"><Edit className="w-4 h-4" /> Sửa đề</button>
@@ -413,22 +393,17 @@ export const PublishView = ({ exams, onPlayExam }: any) => {
                     <Share2 className="w-12 h-12 text-slate-200 mx-auto mb-4" /><p className="text-slate-400 font-bold">Hiện không có đề thi nào đang mở.</p>
                 </div>
             ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                     {publishedExams.map((exam: any) => (
-                        <div key={exam.id} className="exam-card">
-                            <div className="flex justify-between items-start mb-6">
-                                <span className="bg-[#009688] text-white px-4 py-1.5 rounded-xl text-[11px] font-black uppercase tracking-widest shadow-sm">Đang mở</span>
-                                <BookOpen className="w-6 h-6 text-blue-500" strokeWidth={1.5} />
+                        <div key={exam.id} className="exam-card shadow-lg ring-1 ring-slate-100">
+                            <div className="flex justify-between items-start mb-6"><span className="bg-teal-600 text-white px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest">Đang mở</span><BookOpen className="w-5 h-5 text-blue-500"/></div>
+                            <h3 className="text-2xl font-black text-slate-800 mb-4">{exam.title}</h3>
+                            <div className="flex flex-col gap-3 text-xs font-bold text-slate-400 uppercase tracking-widest mb-8">
+                                <span className="flex items-center gap-2"><Clock className="w-4 h-4 text-teal-600"/> {exam.duration} Phút</span>
+                                <span className="flex items-center gap-2"><List className="w-4 h-4 text-teal-600"/> {exam.questions?.length} Câu hỏi</span>
+                                <span className="flex items-center gap-2"><GraduationCap className="w-4 h-4 text-teal-600"/> Lớp {exam.className}</span>
                             </div>
-                            <h3 className="text-3xl font-black text-slate-800 mb-6 leading-tight">{exam.title}</h3>
-                            <div className="flex flex-col gap-4 text-[14px] font-black text-slate-400 uppercase tracking-widest mb-10">
-                                <span className="flex items-center gap-3"><Clock className="w-6 h-6 text-[#009688]" strokeWidth={2} /> {exam.duration} Phút</span>
-                                <span className="flex items-center gap-3"><List className="w-6 h-6 text-[#009688]" strokeWidth={2} /> {exam.questions?.length} Câu hỏi</span>
-                                <span className="flex items-center gap-3"><GraduationCap className="w-6 h-6 text-[#009688]" strokeWidth={2} /> Lớp {exam.className}</span>
-                            </div>
-                            <button onClick={() => onPlayExam(exam)} className="w-full py-4.5 bg-[#009688] text-white rounded-[24px] font-black text-lg shadow-xl hover:bg-teal-700 transition-all flex items-center justify-center gap-3 mt-auto transform active:scale-95">
-                                <PlayCircle className="w-7 h-7"/> Vào thi ngay
-                            </button>
+                            <button onClick={() => onPlayExam(exam)} className="w-full py-4 bg-teal-600 text-white rounded-2xl font-black shadow-xl hover:bg-teal-700 transition-all flex items-center justify-center gap-2 mt-auto"><PlayCircle className="w-5 h-5"/> Vào thi ngay</button>
                         </div>
                     ))}
                 </div>
@@ -437,226 +412,274 @@ export const PublishView = ({ exams, onPlayExam }: any) => {
     );
 };
 
-// --- FIX: Added missing ExamEditor component ---
 export const ExamEditor = ({ exam, onUpdate, onBack, onPublish, initialShowImport }: any) => {
-  const [questions, setQuestions] = useState<Question[]>(exam.questions || []);
-  const [editingQ, setEditingQ] = useState<Question | null>(null);
-  const [showImport, setShowImport] = useState(initialShowImport || false);
+    const [showEditModal, setShowEditModal] = useState<Question | null>(null);
+    const [showImportModal, setShowImportModal] = useState(initialShowImport || false);
+    const [questions, setQuestions] = useState<Question[]>(exam.questions || []);
 
-  const handleAddQuestion = (type: QuestionType) => {
-    const newQ: Question = {
-      id: Date.now(),
-      type,
-      question: 'Câu hỏi mới',
-      options: type === 'choice' ? ['A', 'B', 'C', 'D'] : [],
-      answer: '',
-      subQuestions: type === 'group' ? [] : undefined,
-      mixQuestion: true,
-      mixOptions: true
+    const handleUpdateQuestions = (newQs: Question[]) => { setQuestions(newQs); onUpdate({ ...exam, questions: newQs }); };
+    
+    // Tạo danh sách các phần (sections) theo thứ tự xuất hiện đầu tiên của chúng
+    const sectionOrder: string[] = [];
+    questions.forEach(q => {
+      const sec = q.section || "KHÁC";
+      if (!sectionOrder.includes(sec)) sectionOrder.push(sec);
+    });
+
+    const handleAddQuestion = (type: QuestionType) => {
+        const newQ: Question = {
+            id: Date.now() + Math.random(),
+            type,
+            question: "Nội dung câu hỏi mới...",
+            section: type === 'choice' ? "PHẦN I. TRẮC NGHIỆM KHÁCH QUAN" : (type === 'group' ? "PHẦN II. CÂU HỎI ĐÚNG SAI" : "PHẦN III. TRẢ LỜI NGẮN"),
+            options: type === 'choice' ? ["Lựa chọn 1", "Lựa chọn 2", "Lựa chọn 3", "Lựa chọn 4"] : [],
+            subQuestions: type === 'group' ? [{ id: '1', content: "Mệnh đề a...", correctAnswer: true }, { id: '2', content: "Mệnh đề b...", correctAnswer: false },{ id: '3', content: "Mệnh đề c...", correctAnswer: true },{ id: '4', content: "Mệnh đề d...", correctAnswer: true }] : [],
+            answer: type === 'choice' ? "Lựa chọn 1" : "",
+            mixQuestion: true,
+            mixOptions: true
+        };
+        handleUpdateQuestions([...questions, newQ]);
     };
-    const newQuestions = [...questions, newQ];
-    setQuestions(newQuestions);
-    onUpdate({ ...exam, questions: newQuestions });
-  };
 
-  const handleUpdateQuestion = (updatedQ: Question) => {
-    const newQuestions = questions.map(q => q.id === updatedQ.id ? updatedQ : q);
-    setQuestions(newQuestions);
-    onUpdate({ ...exam, questions: newQuestions });
-    setEditingQ(null);
-  };
-
-  const handleDeleteQuestion = (id: number) => {
-    if (confirm("Xóa câu hỏi này?")) {
-      const newQuestions = questions.filter(q => q.id !== id);
-      setQuestions(newQuestions);
-      onUpdate({ ...exam, questions: newQuestions });
-    }
-  };
-
-  const handleImport = (newQs: Question[]) => {
-    const updatedQs = [...questions, ...newQs];
-    setQuestions(updatedQs);
-    onUpdate({ ...exam, questions: updatedQs });
-  };
-
-  return (
-    <div className="space-y-6 animate-fade-in font-poppins pb-20">
-      <div className="flex items-center justify-between bg-white p-6 rounded-[24px] shadow-sm border border-gray-100">
-        <div className="flex items-center gap-4">
-          <button onClick={onBack} className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-400">
-            <ArrowLeft className="w-6 h-6" />
-          </button>
-          <div>
-            <h2 className="text-xl font-black text-gray-800">{exam.title}</h2>
-            <p className="text-xs font-bold text-teal-600 uppercase tracking-widest mt-0.5">Lớp {exam.className} • {questions.length} câu hỏi</p>
-          </div>
-        </div>
-        <div className="flex gap-3">
-          <button onClick={() => setShowImport(true)} className="px-5 py-2.5 bg-indigo-50 text-indigo-600 rounded-xl font-bold text-sm hover:bg-indigo-100 flex items-center gap-2 border border-indigo-100">
-            <FileUp className="w-4 h-4" /> Import Word
-          </button>
-          <button onClick={onPublish} className="px-5 py-2.5 bg-teal-600 text-white rounded-xl font-bold text-sm hover:bg-teal-700 shadow-lg flex items-center gap-2">
-            <Share2 className="w-4 h-4" /> Xuất bản đề
-          </button>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 gap-6">
-        {questions.map((q, idx) => (
-          <div key={q.id} className="bg-white rounded-[24px] p-8 border border-gray-100 shadow-sm relative group">
-            <div className="flex justify-between items-start mb-6">
-               <div className="flex items-center gap-3">
-                  <span className="question-badge">Câu {idx + 1}</span>
-                  {q.section && <span className="section-pill">{q.section}</span>}
-                  <span className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest ${
-                    q.type === 'choice' ? 'bg-blue-50 text-blue-600' : 
-                    q.type === 'group' ? 'bg-purple-50 text-purple-600' : 'bg-amber-50 text-amber-600'
-                  }`}>
-                    {q.type === 'choice' ? 'Trắc nghiệm' : q.type === 'group' ? 'Đúng/Sai' : 'Tự luận'}
-                  </span>
-               </div>
-               <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button onClick={() => setEditingQ(q)} className="btn-action-pill"><Edit className="w-3.5 h-3.5"/> Sửa</button>
-                  <button onClick={() => handleDeleteQuestion(q.id)} className="btn-action-pill hover:text-red-500 hover:border-red-200"><Trash2 className="w-3.5 h-3.5"/> Xóa</button>
-               </div>
-            </div>
-
-            <div className="text-gray-800 font-medium text-lg leading-relaxed mb-6">
-               <MathRenderer text={q.question} allowMarkdown={true} />
-               {q.image && <div className="mt-4"><img src={q.image} className="max-h-60 rounded-xl border" alt="question" /></div>}
-            </div>
-
-            {q.type === 'choice' && (
-              <div className="choice-grid">
-                {q.options?.map((opt, i) => (
-                  <div key={i} className={`choice-item-box ${opt === q.answer ? 'correct' : ''}`}>
-                    <span className="font-black text-gray-400">{String.fromCharCode(65+i)}.</span>
-                    <span className="flex-1"><MathRenderer text={opt} /></span>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {q.type === 'group' && (
-              <div className="border border-gray-100 rounded-2xl overflow-hidden mt-4">
-                {q.subQuestions?.map((sub, i) => (
-                  <div key={sub.id} className="sub-question-row bg-white">
-                    <div className="flex items-center gap-3">
-                      <span className="font-bold text-gray-400 text-xs">{String.fromCharCode(97+i)})</span>
-                      <span className="text-sm font-medium text-gray-700"><MathRenderer text={sub.content} /></span>
+    return (
+        <div className="flex flex-col h-full bg-[#f1f8f7] font-poppins">
+            <style>{DASHBOARD_STYLES}</style>
+            <div className="bg-white border-b px-8 py-4 flex items-center justify-between sticky top-0 z-40 shadow-sm shrink-0">
+                <div className="flex items-center gap-4">
+                    <button onClick={onBack} className="p-2.5 hover:bg-slate-50 rounded-xl border text-slate-400 hover:text-indigo-600 transition-all"><ArrowLeft className="w-5 h-5" /></button>
+                    <div>
+                      <h2 className="text-xl font-black text-slate-800 truncate max-w-md">{exam.title}</h2>
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{questions.length} câu hỏi hệ thống</p>
                     </div>
-                    <span className={`text-[10px] font-black px-2 py-1 rounded-md ${sub.correctAnswer ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                      {sub.correctAnswer ? 'ĐÚNG' : 'SAI'}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
+                </div>
+                <div className="flex gap-3">
+                    <button onClick={() => setShowImportModal(true)} className="px-5 py-2.5 bg-indigo-50 text-indigo-600 rounded-xl font-bold flex items-center gap-2 hover:bg-indigo-100 border border-indigo-100 transition-all"><FileUp className="w-4 h-4"/> Import Word</button>
+                    <button onClick={onPublish} className="px-6 py-2.5 bg-[#0D9488] text-white rounded-xl font-black shadow-lg hover:bg-teal-700 flex items-center gap-2 transition-all transform hover:-translate-y-0.5"><Share2 className="w-4 h-4"/> Xuất bản đề</button>
+                </div>
+            </div>
 
-      <div className="fixed bottom-8 left-1/2 -translate-x-1/2 flex gap-4 bg-white/80 backdrop-blur-md p-3 rounded-[32px] shadow-2xl border border-white/50 z-40">
-        <button onClick={() => handleAddQuestion('choice')} className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-2xl font-black text-xs shadow-lg hover:bg-blue-700 transition-all transform hover:-translate-y-1">
-          <Plus className="w-4 h-4"/> TRẮC NGHIỆM
-        </button>
-        <button onClick={() => handleAddQuestion('group')} className="flex items-center gap-2 px-6 py-3 bg-purple-600 text-white rounded-2xl font-black text-xs shadow-lg hover:bg-purple-700 transition-all transform hover:-translate-y-1">
-          <Plus className="w-4 h-4"/> ĐÚNG / SAI
-        </button>
-        <button onClick={() => handleAddQuestion('text')} className="flex items-center gap-2 px-6 py-3 bg-amber-600 text-white rounded-2xl font-black text-xs shadow-lg hover:bg-amber-700 transition-all transform hover:-translate-y-1">
-          <Type className="w-4 h-4"/> TỰ LUẬN
-        </button>
-      </div>
+            <div className="flex-1 overflow-y-auto p-8 space-y-12 max-w-5xl mx-auto w-full pb-32">
+                {questions.length === 0 && (
+                   <div className="h-64 flex flex-col items-center justify-center bg-white rounded-[32px] border-2 border-dashed border-gray-200">
+                      <BookOpen className="w-12 h-12 text-gray-200 mb-4" />
+                      <p className="text-gray-400 font-bold">Chưa có câu hỏi nào. Nhấn các nút bên dưới để thêm hoặc Import Word.</p>
+                   </div>
+                )}
+                
+                {sectionOrder.map(section => {
+                  const qs = questions.filter(q => (q.section || "KHÁC") === section);
+                  return (
+                    <div key={section} className="space-y-6">
+                      <div className="flex justify-center mb-8">
+                         <span className="section-pill">{section}</span>
+                      </div>
+                      
+                      {qs.map((q) => (
+                        <div key={q.id} className="bg-white rounded-[24px] shadow-sm border border-slate-100 overflow-hidden hover:shadow-md transition-all group p-8 relative">
+                            <div className="flex justify-between items-start mb-6">
+                               <div className="question-badge">Câu {questions.indexOf(q) + 1}</div>
+                               <div className="flex gap-2">
+                                  <button onClick={() => setShowEditModal(q)} className="px-4 py-1.5 bg-amber-50 text-amber-600 rounded-lg text-xs font-bold hover:bg-amber-100 transition-colors">Sửa</button>
+                                  <button onClick={() => handleUpdateQuestions(questions.filter(item => item.id !== q.id))} className="px-4 py-1.5 bg-red-50 text-red-500 rounded-lg text-xs font-bold hover:bg-red-100 transition-colors">Xóa</button>
+                               </div>
+                            </div>
 
-      {editingQ && <EditQuestionModal question={editingQ} onClose={() => setEditingQ(null)} onSave={handleUpdateQuestion} />}
-      {showImport && <ImportModal onClose={() => setShowImport(false)} onImport={handleImport} />}
-    </div>
-  );
+                            <div className="space-y-4">
+                               <div className="text-[15px] font-medium text-slate-700 leading-relaxed text-justify">
+                                  <MathRenderer text={q.question} allowMarkdown={true} />
+                               </div>
+                               
+                               {q.image && (
+                                  <div className="max-w-xl mx-auto py-2">
+                                    <img src={q.image} alt="Question" className="max-h-[300px] rounded-2xl shadow-sm border object-contain mx-auto" />
+                                  </div>
+                               )}
+
+                               {q.type === 'choice' && (
+                                  <div className="choice-grid mt-6">
+                                     {q.options?.map((opt, i) => (
+                                       <div key={i} className={`choice-item-box ${q.answer === opt ? 'correct' : ''} flex-col !items-start !gap-2`}>
+                                          <div className="flex items-center gap-2 w-full">
+                                            <span className={`${q.answer === opt ? 'text-green-600' : 'text-slate-400'} font-black w-6`}>{String.fromCharCode(65+i)}.</span>
+                                            <div className="flex-1"><MathRenderer text={opt} allowMarkdown={true} /></div>
+                                          </div>
+                                          {q.optionImages?.[i] && (
+                                            <div className="ml-8">
+                                              <img src={q.optionImages[i]} alt="Option" className="w-24 h-24 rounded object-cover border" />
+                                            </div>
+                                          )}
+                                       </div>
+                                     ))}
+                                  </div>
+                               )}
+
+                               {q.type === 'group' && (
+                                  <div className="border border-slate-100 rounded-2xl overflow-hidden mt-6">
+                                     <div className="bg-slate-50/50 p-3 flex text-[10px] font-black text-slate-400 uppercase tracking-widest border-b">
+                                        <div className="flex-1 px-4">Nội dung mệnh đề</div>
+                                        <div className="w-20 text-center">Đáp án</div>
+                                     </div>
+                                     {q.subQuestions?.map((sub, i) => (
+                                        <div key={i} className="flex items-center p-4 border-b last:border-b-0">
+                                           <div className="flex-1 text-sm font-medium text-slate-600 flex items-start gap-2">
+                                              <span className="text-slate-300 font-bold">{String.fromCharCode(97+i)})</span>
+                                              <MathRenderer text={sub.content} allowMarkdown={true} />
+                                           </div>
+                                           <div className="w-20 text-center">
+                                              <span className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider ${sub.correctAnswer ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                                                {sub.correctAnswer ? 'Đúng' : 'Sai'}
+                                              </span>
+                                           </div>
+                                        </div>
+                                     ))}
+                                  </div>
+                               )}
+
+                               {q.type === 'text' && (
+                                  <div className="mt-4 p-4 bg-indigo-50/30 border border-indigo-100 rounded-2xl">
+                                     <div className="flex items-center gap-2 mb-2">
+                                        <Key className="w-4 h-4 text-indigo-500" />
+                                        <span className="text-[11px] font-black text-indigo-500 uppercase tracking-widest">Đáp án gợi ý:</span>
+                                     </div>
+                                     <p className="text-sm font-medium text-slate-600">{q.answer || "(Chưa thiết lập)"}</p>
+                                  </div>
+                               )}
+                            </div>
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })}
+            </div>
+
+            <div className="fixed bottom-10 left-1/2 -translate-x-1/2 flex gap-3 bg-white/80 backdrop-blur-md p-3 rounded-[30px] shadow-2xl border border-white/50 z-50">
+                <button onClick={() => handleAddQuestion('choice')} className="px-6 py-3.5 bg-[#0D9488] text-white rounded-[20px] font-black text-xs hover:bg-teal-700 shadow-lg flex items-center gap-2 transition-all transform hover:-translate-y-1 uppercase tracking-wider"><Plus className="w-4 h-4" /> Trắc nghiệm</button>
+                <button onClick={() => handleAddQuestion('group')} className="px-6 py-3.5 bg-indigo-600 text-white rounded-[20px] font-black text-xs hover:bg-indigo-700 shadow-lg flex items-center gap-2 transition-all transform hover:-translate-y-1 uppercase tracking-wider"><Plus className="w-4 h-4" /> Đúng/Sai</button>
+                <button onClick={() => handleAddQuestion('text')} className="px-6 py-3.5 bg-slate-800 text-white rounded-[20px] font-black text-xs hover:bg-slate-900 shadow-lg flex items-center gap-2 transition-all transform hover:-translate-y-1 uppercase tracking-wider"><Plus className="w-4 h-4" /> Trả lời ngắn</button>
+            </div>
+            
+            {showEditModal && <EditQuestionModal question={showEditModal} onSave={(updatedQ) => { handleUpdateQuestions(questions.map(q => q.id === updatedQ.id ? updatedQ : q)); setShowEditModal(null); }} onClose={() => setShowEditModal(null)} />}
+            {showImportModal && <ImportModal onImport={(qs) => { handleUpdateQuestions([...questions, ...qs]); setShowImportModal(false); }} onClose={() => setShowImportModal(false)} />}
+        </div>
+    );
 };
 
-// --- FIX: Added missing ScoreManager component ---
 export const ScoreManager = ({ exams }: { exams: ExamConfig[] }) => {
     const [selectedExam, setSelectedExam] = useState<ExamConfig | null>(exams[0] || null);
-    const [searchTerm, setSearchTerm] = useState('');
+    const [viewingResult, setViewingResult] = useState<StudentResult | null>(null);
+    const sortedResults = [...(selectedExam?.results || [])].sort((a, b) => b.score - a.score);
 
-    const results = selectedExam?.results || [];
-    const filteredResults = results.filter(r => 
-        r.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-        r.className.toLowerCase().includes(searchTerm.toLowerCase())
+    useEffect(() => {
+        if (!selectedExam && exams.length > 0) {
+            setSelectedExam(exams[0]);
+        }
+    }, [exams]);
+
+    if (viewingResult && selectedExam) return (
+        <div className="space-y-6 font-poppins animate-fade-in pb-10">
+            <button onClick={() => setViewingResult(null)} className="flex items-center gap-2 text-teal-600 font-bold hover:bg-teal-50 px-4 py-2 rounded-xl transition-all"><ArrowLeft className="w-5 h-5"/> Quay lại bảng điểm</button>
+            <ResultScreen {...viewingResult} questions={selectedExam.questions} allowReview={true} onRetry={() => setViewingResult(null)} />
+        </div>
     );
 
     return (
-        <div className="space-y-8 animate-fade-in font-poppins">
-            <div className="flex flex-col md:flex-row gap-6 justify-between items-start md:items-center">
+        <div className="space-y-8 font-poppins animate-fade-in">
+            <style>{DASHBOARD_STYLES}</style>
+            
+            <div className="flex flex-col md:flex-row justify-between items-end gap-6">
                 <div>
-                    <h2 className="text-2xl font-black text-gray-800">Báo cáo & Thống kê điểm</h2>
-                    <p className="text-sm text-gray-500 font-medium">Theo dõi tiến độ và kết quả của học sinh</p>
+                    <h2 className="text-4xl font-black text-slate-800 tracking-tight">Báo cáo kết quả</h2>
+                    <p className="text-slate-500 font-medium text-lg mt-1">Bảng xếp hạng và thống kê chi tiết học sinh.</p>
                 </div>
-                <div className="flex gap-3 w-full md:w-auto">
-                    <select 
-                        className="flex-1 md:w-64 p-3 bg-white border border-gray-200 rounded-xl outline-none focus:border-teal-500 font-bold text-gray-700"
-                        value={selectedExam?.id || ''}
-                        onChange={(e) => setSelectedExam(exams.find(ex => ex.id === e.target.value) || null)}
-                    >
-                        {exams.map(ex => <option key={ex.id} value={ex.id}>{ex.title}</option>)}
-                    </select>
+                <div className="flex items-center gap-4">
+                    <div className="relative">
+                        <select 
+                            value={selectedExam?.id || ''} 
+                            onChange={e => setSelectedExam(exams.find(ex => ex.id === e.target.value) || null)} 
+                            className="appearance-none p-4 pr-12 bg-white border border-gray-100 rounded-[20px] font-black text-slate-700 shadow-xl outline-none focus:ring-4 focus:ring-teal-500/10 min-w-[280px] uppercase tracking-wider text-sm cursor-pointer"
+                        >
+                            {exams.length === 0 && <option value="">Chưa có đề thi nào</option>}
+                            {exams.map(ex => <option key={ex.id} value={ex.id}>{ex.title}</option>)}
+                        </select>
+                        <ChevronRight className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 rotate-90 pointer-events-none" />
+                    </div>
                     <button 
-                        onClick={() => selectedExam && exportResultsToExcel(selectedExam.results, selectedExam.title)}
-                        className="px-5 py-3 bg-teal-600 text-white rounded-xl font-bold text-sm shadow-lg flex items-center gap-2 hover:bg-teal-700"
+                        onClick={() => selectedExam && exportResultsToExcel(sortedResults, selectedExam.title)} 
+                        className="flex items-center gap-3 px-8 py-4 bg-[#0d9488] hover:bg-[#0f766e] text-white font-black rounded-[20px] shadow-2xl shadow-teal-100 transition-all transform hover:-translate-y-1"
                     >
-                        <Download className="w-4 h-4" /> Xuất Excel
+                        <FileSpreadsheet className="w-5 h-5" /> XUẤT EXCEL
                     </button>
                 </div>
             </div>
 
-            <div className="report-card p-8">
-                <div className="flex flex-col md:flex-row gap-4 mb-8">
-                    <div className="relative flex-1">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                        <input 
-                            type="text" 
-                            placeholder="Tìm kiếm theo tên hoặc lớp..." 
-                            className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl outline-none focus:bg-white focus:border-teal-500 transition-all font-medium"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                        />
-                    </div>
-                </div>
-
-                <div className="overflow-x-auto rounded-2xl border border-gray-100">
+            <div className="report-card">
+                <div className="overflow-x-auto">
                     <table className="w-full text-left">
-                        <thead className="bg-gray-50 text-gray-500 font-black text-[10px] uppercase tracking-widest border-b border-gray-100">
+                        <thead className="bg-[#f8fafc] border-b border-slate-100">
                             <tr>
-                                <th className="p-5">Hạng</th>
-                                <th className="p-5">Học sinh</th>
-                                <th className="p-5">Lớp</th>
-                                <th className="p-5">Điểm số</th>
-                                <th className="p-5">Vi phạm</th>
-                                <th className="p-5">Thời gian</th>
-                                <th className="p-5">Ngày thi</th>
+                                <th className="p-6 text-[11px] font-black text-slate-400 uppercase tracking-widest text-center w-24">TOP</th>
+                                <th className="p-6 text-[11px] font-black text-slate-400 uppercase tracking-widest pl-10">HỌC VÀ TÊN</th>
+                                <th className="p-6 text-[11px] font-black text-slate-400 uppercase tracking-widest text-center">LỚP</th>
+                                <th className="p-6 text-[11px] font-black text-slate-400 uppercase tracking-widest text-center">ĐIỂM</th>
+                                <th className="p-6 text-[11px] font-black text-slate-400 uppercase tracking-widest text-center">ĐÚNG/SAI</th>
+                                <th className="p-6 text-[11px] font-black text-slate-400 uppercase tracking-widest text-center">THỜI GIAN</th>
+                                <th className="p-6 text-[11px] font-black text-slate-400 uppercase tracking-widest text-center w-24">XEM</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-50">
-                            {filteredResults.sort((a,b) => b.score - a.score).map((res, idx) => (
-                                <tr key={res.id} className="student-row">
-                                    <td className="p-5">
-                                        <div className={`rank-badge ${idx === 0 ? 'rank-1' : 'rank-default'}`}>{idx + 1}</div>
+                        <tbody className="divide-y divide-slate-50">
+                            {sortedResults.length === 0 ? (
+                                <tr>
+                                    <td colSpan={7} className="p-24 text-center">
+                                        <div className="flex flex-col items-center justify-center opacity-30">
+                                            <ClipboardList className="w-20 h-20 mb-4 text-slate-200" />
+                                            <p className="text-xl font-black text-slate-400 uppercase tracking-widest">Chưa có kết quả dự thi</p>
+                                        </div>
                                     </td>
-                                    <td className="p-5 font-bold text-gray-800">{res.name}</td>
-                                    <td className="p-5 font-bold text-teal-600 uppercase text-xs">{res.className}</td>
-                                    <td className="p-5 font-black text-xl text-slate-800">
-                                        {res.score} <span className="text-xs text-gray-300">/ {res.total}</span>
-                                    </td>
-                                    <td className="p-5">
-                                        <span className={`px-2 py-1 rounded text-[10px] font-black ${res.violations > 0 ? 'bg-red-50 text-red-500' : 'bg-green-50 text-green-600'}`}>
-                                            {res.violations} lần
-                                        </span>
-                                    </td>
-                                    <td className="p-5 text-gray-500 text-xs font-bold">{Math.floor(res.timeSpent / 60)}:{String(res.timeSpent % 60).padStart(2, '0')}</td>
-                                    <td className="p-5 text-gray-400 text-[10px] font-bold uppercase">{res.date}</td>
                                 </tr>
-                            ))}
+                            ) : (
+                                sortedResults.map((res, idx) => (
+                                    <tr key={res.id} className="hover:bg-slate-50/80 transition-all group">
+                                        <td className="p-6 text-center">
+                                            <div className={`rank-badge mx-auto ${idx === 0 ? 'rank-1' : 'rank-default'}`}>
+                                                {idx + 1}
+                                            </div>
+                                        </td>
+                                        <td className="p-6 pl-10">
+                                            <span className="font-black text-slate-800 text-lg tracking-tight">{res.name}</span>
+                                        </td>
+                                        <td className="p-6 text-center">
+                                            <span className="px-3 py-1 bg-slate-100 text-slate-500 rounded-lg text-[10px] font-black uppercase tracking-wider">
+                                                {res.className || "KHÁC"}
+                                            </span>
+                                        </td>
+                                        <td className="p-6 text-center">
+                                            <span className="font-black text-3xl text-red-600 tracking-tighter">
+                                                {typeof res.score === 'number' ? res.score.toFixed(2) : "0.00"}
+                                            </span>
+                                        </td>
+                                        <td className="p-6 text-center">
+                                            <div className="flex justify-center items-center gap-3">
+                                                <span className="text-2xl font-black text-green-600">{res.counts?.correct || 0}</span>
+                                                <span className="text-slate-200 font-bold text-xl">/</span>
+                                                <span className="text-2xl font-black text-red-600">{res.counts?.wrong || 0}</span>
+                                            </div>
+                                        </td>
+                                        <td className="p-6 text-center">
+                                            <span className="text-sm text-slate-400 font-bold tracking-tight">
+                                                {Math.floor((res.timeSpent || 0) / 60)}p {(res.timeSpent || 0) % 60}s
+                                            </span>
+                                        </td>
+                                        <td className="p-6 text-center">
+                                            <button 
+                                                onClick={() => setViewingResult(res)} 
+                                                className="p-3 text-slate-300 hover:text-[#0d9488] hover:bg-teal-50 rounded-2xl transition-all shadow-sm border border-transparent hover:border-teal-100"
+                                            >
+                                                <Eye className="w-6 h-6"/>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
                         </tbody>
                     </table>
                 </div>
@@ -665,103 +688,156 @@ export const ScoreManager = ({ exams }: { exams: ExamConfig[] }) => {
     );
 };
 
-// --- FIX: Added missing StudentManager component ---
 export const StudentManager = ({ students, onAddStudent, onEditStudent, onDeleteStudent, onImportStudents, onApproveStudent }: any) => {
-    const [searchTerm, setSearchTerm] = useState('');
     const [showAdd, setShowAdd] = useState(false);
-    const [editingS, setEditingS] = useState<Student | null>(null);
+    const [showEdit, setShowEdit] = useState<Student | null>(0);
     const [showImport, setShowImport] = useState(false);
+    const [search, setSearch] = useState('');
+    const [loadingIds, setLoadingIds] = useState<Set<string>>(new Set());
 
     const filtered = students.filter((s: Student) => 
-        s.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-        s.className.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        s.email?.toLowerCase().includes(searchTerm.toLowerCase())
+        s.name.toLowerCase().includes(search.toLowerCase()) || 
+        s.className.toLowerCase().includes(search.toLowerCase()) ||
+        (s.email && s.email.toLowerCase().includes(search.toLowerCase()))
     );
 
+    const handleToggleStatus = async (s: Student) => {
+        setLoadingIds(prev => new Set(prev).add(s.id));
+        try {
+            await onApproveStudent(s.email || '', s.id, !s.isApproved);
+        } finally {
+            setLoadingIds(prev => {
+                const next = new Set(prev);
+                next.delete(s.id);
+                return next;
+            });
+        }
+    };
+
     return (
-        <div className="space-y-8 animate-fade-in font-poppins">
-            <div className="flex justify-between items-center">
-                <div>
-                    <h2 className="text-2xl font-black text-gray-800">Danh sách Học sinh</h2>
-                    <p className="text-sm text-gray-500 font-medium">Quản lý tài khoản và phê duyệt truy cập</p>
+        <div className="space-y-8 font-poppins animate-fade-in pb-12">
+            <div className="flex flex-col md:flex-row justify-between items-end gap-6 bg-white p-8 rounded-[32px] shadow-sm border border-slate-100">
+                <div className="space-y-2">
+                    <h2 className="text-3xl font-black text-gray-800 flex items-center gap-3">
+                        <Users className="w-10 h-10 text-teal-600" />
+                        Quản lý Học sinh
+                    </h2>
+                    <p className="text-slate-400 font-medium text-sm">Quản lý danh sách, phê duyệt tài khoản và thông tin lớp học.</p>
                 </div>
-                <div className="flex gap-3">
-                    <button onClick={() => setShowImport(true)} className="px-5 py-2.5 bg-indigo-50 text-indigo-600 rounded-xl font-bold text-sm hover:bg-indigo-100 flex items-center gap-2 border border-indigo-100 transition-all">
-                        <Upload className="w-4 h-4" /> Import Excel
+                <div className="flex gap-4">
+                    <button onClick={() => setShowImport(true)} className="px-6 py-3.5 bg-indigo-50 text-indigo-600 rounded-2xl font-bold flex items-center gap-2 hover:bg-indigo-100 shadow-sm transition-all transform hover:-translate-y-0.5">
+                        <FileSpreadsheet className="w-5 h-5" /> Import Excel
                     </button>
-                    <button onClick={() => setShowAdd(true)} className="px-5 py-2.5 bg-teal-600 text-white rounded-xl font-bold text-sm hover:bg-teal-700 shadow-lg flex items-center gap-2 transition-all">
-                        <UserPlus className="w-4 h-4" /> Thêm học sinh
+                    <button onClick={() => setShowAdd(true)} className="px-8 py-3.5 bg-teal-600 text-white rounded-2xl font-black flex items-center gap-2 hover:bg-teal-700 shadow-xl transition-all transform hover:-translate-y-0.5">
+                        <UserPlus className="w-6 h-6" /> Thêm Học Sinh
                     </button>
                 </div>
+            </div>
+
+            <div className="relative group max-w-2xl">
+                <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-300 w-6 h-6 group-focus-within:text-teal-500 transition-colors" />
+                <input 
+                    type="text" 
+                    placeholder="Tìm nhanh học sinh theo tên, lớp hoặc email..." 
+                    value={search} 
+                    onChange={e => setSearch(e.target.value)} 
+                    className="w-full pl-16 pr-8 py-5 bg-white border border-gray-100 rounded-[24px] outline-none focus:border-teal-500 focus:ring-4 ring-teal-50 shadow-sm font-bold text-slate-700 transition-all placeholder:text-slate-300" 
+                />
             </div>
 
             <div className="student-table-container">
-                <div className="p-6 border-b border-gray-50 bg-white">
-                    <div className="relative">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                        <input 
-                            type="text" 
-                            placeholder="Tìm học sinh theo tên, lớp hoặc email..." 
-                            className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl outline-none focus:bg-white focus:border-teal-500 transition-all font-medium"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                        />
-                    </div>
-                </div>
-
                 <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
-                        <thead className="bg-gray-50 text-gray-500 font-black text-[10px] uppercase tracking-widest">
+                    <table className="w-full text-left">
+                        <thead className="bg-slate-50/80 backdrop-blur-sm border-b border-slate-100">
                             <tr>
-                                <th className="p-5 pl-8">Học sinh</th>
-                                <th className="p-5">Lớp</th>
-                                <th className="p-5">Tài khoản (Email)</th>
-                                <th className="p-5 text-center">Trạng thái</th>
-                                <th className="p-5 text-right pr-8">Thao tác</th>
+                                <th className="p-6 text-[11px] font-black text-slate-400 uppercase tracking-widest text-center w-16">STT</th>
+                                <th className="p-6 text-[11px] font-black text-slate-400 uppercase tracking-widest pl-10">Học và Tên</th>
+                                <th className="p-6 text-[11px] font-black text-slate-400 uppercase tracking-widest text-center w-40">Lớp học</th>
+                                <th className="p-6 text-[11px] font-black text-slate-400 uppercase tracking-widest">Thông tin Email</th>
+                                <th className="p-6 text-[11px] font-black text-slate-400 uppercase tracking-widest text-center w-56">Trạng thái phê duyệt</th>
+                                <th className="p-6 text-[11px] font-black text-slate-400 uppercase tracking-widest text-right pr-10">Thao tác</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-50">
-                            {filtered.map((s: Student) => (
-                                <tr key={s.id} className="student-row group bg-white">
-                                    <td className="p-5 pl-8">
-                                        <div className="flex items-center gap-4">
-                                            <div className="w-10 h-10 rounded-full bg-teal-50 text-teal-600 flex items-center justify-center font-black text-xs border border-teal-100 uppercase">
-                                                {s.name.split(' ').pop()?.charAt(0)}
-                                            </div>
-                                            <span className="font-bold text-gray-800">{s.name}</span>
-                                        </div>
-                                    </td>
-                                    <td className="p-5 font-black text-teal-600 text-xs uppercase">{s.className}</td>
-                                    <td className="p-5 text-gray-500 text-xs font-medium flex items-center gap-2">
-                                        <Mail className="w-3.5 h-3.5 text-gray-300" /> {s.email || <span className="text-gray-300 italic">Chưa cập nhật</span>}
-                                    </td>
-                                    <td className="p-5 text-center">
-                                        <button 
-                                            onClick={() => onApproveStudent(s.email || '', s.id, !s.isApproved)}
-                                            className={`status-pill ${s.isApproved ? 'approved' : 'pending'}`}
-                                        >
-                                            {s.isApproved ? (
-                                                <><CheckCircle2 className="w-3.5 h-3.5 mr-1.5" /> ĐÃ PHÊ DUYỆT</>
-                                            ) : (
-                                                <><Clock className="w-3.5 h-3.5 mr-1.5" /> CHỜ PHÊ DUYỆT</>
-                                            )}
-                                        </button>
-                                    </td>
-                                    <td className="p-5 text-right pr-8">
-                                        <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all transform translate-x-2 group-hover:translate-x-0">
-                                            <button onClick={() => setEditingS(s)} className="p-2 hover:bg-teal-50 text-teal-600 rounded-lg transition-colors" title="Sửa thông tin"><Edit className="w-4 h-4" /></button>
-                                            <button onClick={() => onDeleteStudent(s.id, s.email)} className="p-2 hover:bg-red-50 text-red-500 rounded-lg transition-colors" title="Xóa tài khoản"><Trash2 className="w-4 h-4" /></button>
+                        <tbody className="divide-y divide-slate-50">
+                            {filtered.length === 0 ? (
+                                <tr>
+                                    <td colSpan={6} className="p-24 text-center">
+                                        <div className="flex flex-col items-center justify-center opacity-40">
+                                            <Search className="w-16 h-16 mb-4 text-slate-300" />
+                                            <p className="text-xl font-bold text-slate-400">Không tìm thấy kết quả nào</p>
                                         </div>
                                     </td>
                                 </tr>
-                            ))}
+                            ) : (
+                                filtered.map((s: Student, idx: number) => {
+                                    const isRowLoading = loadingIds.has(s.id);
+                                    return (
+                                        <tr key={s.id} className="student-row group bg-white">
+                                            <td className="p-6 text-center font-bold text-slate-400 text-xs">{idx + 1}</td>
+                                            <td className="p-6 pl-10">
+                                                <div className="flex items-center gap-4">
+                                                    <span className="font-black text-slate-800 text-base">{s.name}</span>
+                                                </div>
+                                            </td>
+                                            <td className="p-6 text-center">
+                                                <span className="px-5 py-2 bg-blue-50 text-blue-700 rounded-2xl text-[11px] font-black uppercase shadow-sm border border-blue-100 tracking-wider">
+                                                    {s.className}
+                                                </span>
+                                            </td>
+                                            <td className="p-6">
+                                                <div className="flex items-center gap-2 text-sm text-slate-500 font-semibold italic">
+                                                    <Mail className="w-4 h-4 opacity-40" />
+                                                    {s.email || <span className="text-slate-300">Chưa có email</span>}
+                                                </div>
+                                            </td>
+                                            <td className="p-6 text-center">
+                                                <button 
+                                                    disabled={isRowLoading}
+                                                    onClick={(e) => { e.stopPropagation(); handleToggleStatus(s); }}
+                                                    className={`status-pill ${s.isApproved ? 'approved' : 'pending'}`}
+                                                >
+                                                    {isRowLoading ? (
+                                                        <Loader2 className="w-5 h-5 animate-spin"/>
+                                                    ) : s.isApproved ? (
+                                                        <><CheckCircle2 className="w-4 h-4 mr-2"/> ĐÃ PHÊ DUYỆT</>
+                                                    ) : (
+                                                        <div className="flex flex-col items-center">
+                                                            <div className="flex items-center">
+                                                                <AlertTriangle className="w-4 h-4 mr-2"/> 
+                                                                <span>CHỜ XÁC NHẬN</span>
+                                                            </div>
+                                                            <div className="text-[8px] opacity-60 mt-1">Click để duyệt</div>
+                                                        </div>
+                                                    )}
+                                                </button>
+                                            </td>
+                                            <td className="p-6 text-right pr-10">
+                                                <div className="flex justify-end gap-2 transition-opacity">
+                                                    <button onClick={() => setShowEdit(s)} className="p-3 bg-white text-blue-500 border border-slate-100 hover:bg-blue-50 rounded-2xl transition-all shadow-sm" title="Sửa thông tin">
+                                                        <Edit className="w-5 h-5"/>
+                                                    </button>
+                                                    <button onClick={() => onDeleteStudent(s.id, s.email)} className="p-3 bg-white text-red-500 border border-slate-100 hover:bg-red-50 rounded-2xl transition-all shadow-sm" title="Xóa học sinh">
+                                                        <Trash2 className="w-5 h-5"/>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    );
+                                })
+                            )}
                         </tbody>
                     </table>
+                </div>
+            </div>
+
+            <div className="flex justify-center">
+                <div className="px-6 py-2 bg-slate-100 text-slate-500 rounded-full text-xs font-black uppercase tracking-widest flex items-center gap-2">
+                   <Users className="w-4 h-4" /> Tổng số: {filtered.length} học sinh
                 </div>
             </div>
 
             {showAdd && <StudentModal onClose={() => setShowAdd(false)} onSave={onAddStudent} />}
-            {editingS && <StudentModal student={editingS} onClose={() => setEditingS(null)} onSave={onEditStudent} />}
+            {showEdit && <StudentModal student={showEdit} onClose={() => setShowEdit(null)} onSave={onEditStudent} />}
             {showImport && <ImportStudentModal onClose={() => setShowImport(false)} onImport={onImportStudents} />}
         </div>
     );
